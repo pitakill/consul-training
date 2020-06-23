@@ -1,23 +1,21 @@
 data_dir = "/var/consul/config/"
-log_leve = "DEBUG"
+log_level = "DEBUG"
 
 datacenter = "sfo"
-
-ui = true
-server = true
-bootstrap_expect = 1
 
 bind_addr = "0.0.0.0"
 client_addr = "0.0.0.0"
 
 ports {
-  http = 8200
+  http = 8500
 }
 
-advertise_addr = "172.20.20.11"
+advertise_addr = "172.20.20.12"
 
 acl = {
-  enable = true
+  enabled = true
   default_policy = "deny"
   down_policy = "extend-cache"
 }
+
+start_joint = ["172.20.20.11"]
