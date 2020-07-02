@@ -1,0 +1,41 @@
+data_dir  = "/var/consul/config/"
+log_level = "DEBUG"
+
+datacenter = "{{env "DATACENTER"}}"
+
+{{if eq (env "SERVER") "true"}}
+ui               = true
+server           = true
+bootstrap_expect = 1
+
+verify_incoming = false
+auto_encrypt = {
+  tls = true
+}
+{{end}}
+
+ca_file   = "/vagrant/provision/certs/{{env "DATACENTER"}}/fullchain1.pem"
+cert_file = "/vagrant/provision/certs/{{env "DATACENTER"}}/cert1.pem"
+key_file  = "/vagrant/provision/certs/{{env "DATACENTER"}}/privkey1.pem"
+verify_outgoing = true
+
+{{if eq (env "SERVER") "false"}}
+start_join = ["{{env "SERVER_IP"}}"]
+{{end}}
+
+bind_addr   = "0.0.0.0"
+client_addr = "0.0.0.0"
+
+ports {
+  grpc  = 8502
+  http  = 8500
+  https = 8501
+}
+
+advertise_addr = "{{env "IP_ADDRESS"}}"
+
+acl = {
+  enabled        = true
+  default_policy = "deny"
+  down_policy    = "extend-cache"
+}
