@@ -1,0 +1,32 @@
+{
+  "services": [
+    {
+      "name": "backend",
+      "tags": [
+        "go",
+        "counter"
+      ],
+      "port": 8080,
+      "check": {
+        "name": "http-check",
+        "http": "http://172.17.0.2:8080/healthcheck",
+        "interval": "30s"
+      },
+      "token": ""
+    },
+    {
+      "name": "frontend",
+      "tags": [
+        "svelte",
+        "counter"
+      ],
+      "port": 80,
+      "check": {
+        "name": "http-check",
+        "http": "http://172.17.0.3",
+        "interval": "30s"
+      },
+      "token": ""
+    }
+  ]
+}
