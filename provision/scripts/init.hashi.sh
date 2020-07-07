@@ -21,6 +21,7 @@ sudo mkdir -p "$LOCAL_CONFIG_DIR"
 . "$LOCAL_ENV_DIR"
 sudo -E consul-template -template "$VAGRANT_CONFIG_DIR/consul.hcl.tmpl:$LOCAL_CONFIG_DIR/consul.hcl" -once
 sudo cp "$VAGRANT_CONFIG_DIR/services.json" "$LOCAL_CONFIG_DIR/services.json"
-sudo cp "$VAGRANT_SYSTEM_DIR/consul.service" "$LOCAL_SYSTEM_DIR/consul.service"
+eudo cp "$VAGRANT_SYSTEM_DIR/consul.service" "$LOCAL_SYSTEM_DIR/consul.service"
+sudo cp "$VAGRANT_SYSTEM_DIR/consul-replicate.service" "$LOCAL_SYSTEM_DIR/consul-replicate.service"
 sudo chmod -R +x "$LOCAL_CONFIG_DIR"
 sudo chmod -R +x "$VAGRANT_SYSTEM_DIR"

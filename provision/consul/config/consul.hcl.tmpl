@@ -4,6 +4,8 @@ log_level = "DEBUG"
 datacenter = "{{env "DATACENTER"}}"
 
 {{if eq (env "SERVER") "true"}}
+primary_datacenter = "sfo"
+
 ui               = true
 server           = true
 bootstrap_expect = 1
@@ -12,6 +14,8 @@ verify_incoming = false
 auto_encrypt = {
   tls = true
 }
+
+retry_join_wan = ["172.20.20.11", "172.20.20.21"]
 {{end}}
 
 ca_file   = "/vagrant/provision/certs/{{env "DATACENTER"}}/fullchain1.pem"
