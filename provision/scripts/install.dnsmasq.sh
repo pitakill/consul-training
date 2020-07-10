@@ -80,10 +80,11 @@ function install_dnsmasq {
 
   log_info "Installing Dnsmasq"
 
-  if $(has_apt_get); then
-    sudo apt-get update -y
+  if has_apt_get; then
+    pre_install
     sudo apt-get install -y dnsmasq
-  elif $(has_yum); then
+    post_install
+  elif has_yum; then
     sudo yum update -y
     sudo yum install -y dnsmasq
     echo "prepend domain-name-servers $consul_ip;" | sudo tee -a "/etc/dhcp/dhclient.conf" > /dev/null
@@ -113,12 +114,26 @@ listen-address=127.0.0.1
 EOF
 }
 
+function pre_install {
+  sudo apt-get update -y
+  sudo apt-get install -d -y dnsmasq
+  sudo systemctl stop systemd-resolved
+}
+
+function post_install {
+  echo "conf-dir=$DNS_MASQ_CONFIG_DIR" | sudo tee -a "/etc/dnsmasq.conf" > /dev/null
+  echo "port=5353" | sudo tee -a "/etc/dnsmasq.conf" > /dev/null
+  sudo systemctl daemon-reload
+  sudo systemctl restart systemd-resolved.service
+  sudo systemctl restart dnsmasq.service
+}
+
 function install {
   local consul_domain="$DEFAULT_CONSUL_DOMAIN"
   local consul_ip="$DEFAULT_CONSUL_IP"
   local consul_dns_port="$DEFAULT_CONSUL_DNS_PORT"
 
-  while [[ $# > 0 ]]; do
+  while [[ $# -gt 0 ]]; do
     local key="$1"
 
     case "$key" in
@@ -159,5 +174,4 @@ function install {
 
 install "$@"
 
-sudo systemctl daemon-reload
-sudo /etc/init.d/dnsmasq restart
+sudo systemctl restart systemd-resolved.service
