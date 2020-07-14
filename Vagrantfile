@@ -14,7 +14,7 @@ Vagrant.configure("2") do |config|
 
   clusters = {
     :sfo => [
-      # { :type => "server", :ip => "#{segment}.11", :is_server => true, :ip_server => "" },
+      { :type => "server", :ip => "#{segment}.11", :is_server => true, :ip_server => "" },
       { :type => "client", :ip => "#{segment}.12", :is_server => false, :ip_server => "#{segment}.11" }
     ],
     # :nyc => [
@@ -29,9 +29,7 @@ Vagrant.configure("2") do |config|
         cs.vm.hostname = "#{cluster}-consul-#{machine[:type]}"
         cs.vm.network "private_network", ip: "#{machine[:ip]}"
         cs.vm.provision "shell", path: "provision/scripts/init.hashi.sh", args: "#{cluster} #{machine[:ip]} #{machine[:is_server]} #{machine[:ip_server]}", privileged: false
-        if machine[:is_server]
-          cs.vm.provision "shell", path: "provision/scripts/install.dnsmasq.sh", privileged: false
-        end
+        cs.vm.provision "shell", path: "provision/scripts/setup.dns.sh", args: "", privileged: false
 
         cs.vm.provision "shell", privileged: false, inline: <<-EOF
           echo "Vagrant Box provisioned!"

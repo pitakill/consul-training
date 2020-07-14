@@ -1,5 +1,5 @@
 consul {
-  address = "nyc.pitakill.net:8501"
+  address = "nyc.pitakill.net:8500"
 
   retry {
     attempts = 12
@@ -8,20 +8,20 @@ consul {
   ssl {
     enabled = true
     verify = true
-    ca_cert = "/vagrant/provision/certs/fullchain1.pem"
+    ca_cert = "/var/certs/fullchain.pem"
   }
 }
 
 log_level = "debug"
 
 prefix {
-  source = "app"
+  source = "cluster/global"
   datacenter = "sfo"
-  destination = "app"
+  destination = "cluster/global"
 }
 
 prefix {
-  source = "app2"
+  source = "cluster/app"
   datacenter = "sfo"
-  destination = "app2"
+  destination = "cluster/app"
 }

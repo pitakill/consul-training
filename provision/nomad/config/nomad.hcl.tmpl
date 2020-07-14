@@ -1,0 +1,70 @@
+bind_addr  = "{{ env "IP_ADDRESS" }}"
+datacenter =  "{{ env "DATACENTER" }}-ncv"
+region     =  "{{ env "DATACENTER" }}-region"
+data_dir   = "/var/nomad/data"
+log_level  = "DEBUG"
+
+leave_on_terminate   = true
+leave_on_interrupt   = true
+disable_update_check = true
+
+
+{{if eq (env "SERVER") "false"}}
+client {
+    enabled = true
+}
+{{end}}
+
+addresses {
+    rpc  = "{{ env "IP_ADDRESS" }}"
+    http = "{{ env "IP_ADDRESS" }}"
+    serf = "{{ env "IP_ADDRESS" }}"
+}
+advertise {
+    http = "{{ env "IP_ADDRESS" }}:4646"
+    rpc  = "{{ env "IP_ADDRESS" }}:4647"
+    serf = "{{ env "IP_ADDRESS" }}:4648"
+}
+consul {
+    address = "{{ env "DATACENTER" }}.pitakill.net:8500"
+    
+    client_service_name = "nomad-{{ env "DATACENTER" }}-client"
+    server_service_name = "nomad-{{ env "DATACENTER" }}-server"
+
+    auto_advertise      = true
+    server_auto_join    = true
+    client_auto_join    = true
+
+    ca_file    = "{{ env "CONSUL_CACERT" }}"
+    cert_file  = "{{ env "CONSUL_CLIENT_CERT" }}"
+    key_file   = "{{ env "CONSUL_CLIENT_KEY" }}"
+    ssl        = {{ env "CONSUL_SSL" }}
+    verify_ssl = {{ env "CONSUL_SSL" }}
+
+    token   = "{{ env "CONSUL_HTTP_TOKEN" }}"
+}
+
+{{if eq (env "SERVER") "true"}}
+server {
+    enabled = true
+    bootstrap_expect = {{ env "NOMAD_SERVERS" }}
+}
+{{end}}
+
+tls {
+    http = true
+    rpc  = true
+
+    ca_file    = "{{ env "NOMAD_CACERT" }}"
+    cert_file  = "{{ env "NOMAD_CLIENT_CERT" }}"
+    key_file   = "{{ env "NOMAD_CLIENT_KEY" }}"
+
+    verify_https_client    = false
+    verify_server_hostname = false
+}
+
+plugin "raw_exec" {
+  config {
+    enabled = true
+  }
+}

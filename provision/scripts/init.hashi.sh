@@ -1,8 +1,13 @@
 #!/bin/bash
 
-tools=(consul nomad vault)
+tools=(consul nomad)
 OUTSIDE="/vagrant/provision"
-LOCAL_ENV_DIR="/etc/environment"
+
+function copy_certificates {
+  local output="/var/certs"
+  sudo cp -r "$OUTSIDE/certs" /var/certs
+  sudo chown -R 1000:1000 "$output"
+}
 
 function copy_templates {
   local output="/var/$1/config"
@@ -16,21 +21,55 @@ function copy_services {
 }
 
 function setup_environment {
-  sudo cp "$OUTSIDE/scripts/envs.sh" "$LOCAL_ENV_DIR"
+  local output="/etc/environment"
+  sudo cp "$OUTSIDE/scripts/envs.sh" "$output"
 
-  sudo sed -i "s/@data_centers/'[\"172.20.20.11\",\"172.20.20.21\"]'/" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@data_center/$1/g" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@ip_address/$2/g" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@server_ip/$4/g" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@server/$3/g" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@primary_dc/sfo/g" "$LOCAL_ENV_DIR"
-  sudo sed -i "s/@secondary_dc/nyc/g" "$LOCAL_ENV_DIR"
+  sudo sed -i "s/@data_centers/'[\"172.20.20.11\",\"172.20.20.21\"]'/" "$output"
+  sudo sed -i "s/@data_center/$1/g" "$output"
+  sudo sed -i "s/@ip_address/$2/g" "$output"
+  sudo sed -i "s/@server_ip/$4/g" "$output"
+  sudo sed -i "s/@server/$3/g" "$output"
+  sudo sed -i "s/@primary_dc/sfo/g" "$output"
+  sudo sed -i "s/@secondary_dc/nyc/g" "$output"
+
+  # Environment for docker inside the vms
+  local docker_output="/etc/docker"
+  sudo cp "$OUTSIDE/docker/daemon.json.tmpl" "$docker_output/daemon.json.tmpl"
+}
+
+function start_tool {
+  sudo systemctl daemon-reload
+  sudo systemctl restart "$1"
+}
+
+function bootstrap {
+  # Bootstrap only servers
+  if [ "$3" == "true" ]; then
+    # Bootstrap only principal consul for storage the root token
+    if [ "$1" == "sfo" ]; then 
+      sudo bash "$OUTSIDE/consul/system/bootstrap.sh"
+    fi
+
+    # Bootstrap only secondaries
+    if [ "$1" != "sfo" ]; then
+      sudo systemctl restart consul-replicate
+    fi
+  fi
+
+  sudo bash "$OUTSIDE/scripts/init.secondaries.sh"
 }
 
 # Setup
+setup_environment "$@"
+copy_certificates
 for t in "${tools[@]}"
 do
   copy_templates "${t}"
   copy_services "${t}"
+  start_tool "${t}"
 done
-setup_environment "$@"
+bootstrap "$@"
+for t in "${tools[@]}"
+do
+  start_tool "${t}"
+done

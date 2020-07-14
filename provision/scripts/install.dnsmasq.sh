@@ -9,7 +9,7 @@
 set -e
 
 readonly DEFAULT_CONSUL_DOMAIN="consul"
-readonly DEFAULT_CONSUL_IP="172.20.20.11"
+readonly DEFAULT_CONSUL_IP="${IP_ADDRESS}"
 readonly DEFAULT_CONSUL_DNS_PORT=8600
 
 readonly DNS_MASQ_CONFIG_DIR="/etc/dnsmasq.d"
@@ -107,10 +107,8 @@ function write_consul_config {
   sudo tee "$CONSUL_DNS_MASQ_CONFIG_FILE" <<EOF
 # Enable forward lookup of the '$consul_domain' domain:
 server=/${consul_domain}/${DEFAULT_CONSUL_IP}#${consul_port}
-server=/${consul_domain}/127.0.0.1#${consul_port}
 
 listen-address=${DEFAULT_CONSUL_IP}
-listen-address=127.0.0.1
 EOF
 }
 

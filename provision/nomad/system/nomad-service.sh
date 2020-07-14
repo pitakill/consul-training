@@ -1,8 +1,10 @@
 #!/bin/bash
+
 . /etc/environment
 
-consul-template -template "/etc/docker/daemon.json.tmpl:/etc/docker/daemon.json" -once
+NOMAD_DIR=/var/nomad/config
+DOCKER_DIR=/etc/docker
 
-consul-template -template "/var/nomad/config/nomad.hcl.tmpl:/var/nomad/config/nomad.hcl" -once
-
+consul-template -template "$DOCKER_DIR/daemon.json.tmpl:$DOCKER_DIR/daemon.json" -once
+consul-template -template "$NOMAD_DIR/nomad.hcl.tmpl:$NOMAD_DIR/nomad.hcl" -once
 exec nomad agent -config /var/nomad/config >>/var/log/nomad.log 2>&1

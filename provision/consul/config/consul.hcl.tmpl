@@ -1,14 +1,13 @@
 data_dir  = "/var/consul/config/"
 log_level = "DEBUG"
 
-datacenter = "{{env "DATACENTER"}}"
+datacenter         = "{{env "DATACENTER"}}"
+primary_datacenter = "{{env "PRIMARY_DATACENTER"}}"
 
 {{if eq (env "SERVER") "true"}}
-primary_datacenter = "sfo"
-
 ui               = true
 server           = true
-bootstrap_expect = 1
+bootstrap_expect = {{ env "CONSUL_SERVERS" }}
 
 verify_incoming = false
 auto_encrypt = {
@@ -18,9 +17,9 @@ auto_encrypt = {
 retry_join_wan = ["172.20.20.11", "172.20.20.21"]
 {{end}}
 
-ca_file   = "/vagrant/provision/certs/{{env "DATACENTER"}}/fullchain1.pem"
-cert_file = "/vagrant/provision/certs/{{env "DATACENTER"}}/cert1.pem"
-key_file  = "/vagrant/provision/certs/{{env "DATACENTER"}}/privkey1.pem"
+ca_file   = "/var/certs/fullchain.pem"
+cert_file = "/var/certs/cert.pem"
+key_file  = "/var/certs/privkey.pem"
 verify_outgoing = true
 
 {{if eq (env "SERVER") "false"}}
@@ -32,8 +31,8 @@ client_addr = "0.0.0.0"
 
 ports {
   grpc  = 8502
-  http  = 8500
-  https = 8501
+  https = {{ if eq (env "CONSUL_SSL") "true" }}{{ env "CONSUL_PORT" }}{{ else }}-1{{end}}
+  http  = {{ if eq (env "CONSUL_SSL") "true" }}-1{{ else }}{{ env "CONSUL_PORT" }}{{end}}
 }
 
 advertise_addr = "{{env "IP_ADDRESS"}}"
