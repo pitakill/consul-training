@@ -26,7 +26,7 @@ advertise {
     serf = "{{ env "IP_ADDRESS" }}:4648"
 }
 consul {
-    address = "{{ env "DATACENTER" }}.pitakill.net:8500"
+    address = "{{ env "DOMAIN" }}.pitakill.net:8500"
     
     client_service_name = "nomad-{{ env "DATACENTER" }}-client"
     server_service_name = "nomad-{{ env "DATACENTER" }}-server"

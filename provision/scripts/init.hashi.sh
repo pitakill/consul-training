@@ -27,8 +27,9 @@ function setup_environment {
   sudo sed -i "s/@data_centers/'[\"172.20.20.11\",\"172.20.20.21\"]'/" "$output"
   sudo sed -i "s/@data_center/$1/g" "$output"
   sudo sed -i "s/@ip_address/$2/g" "$output"
-  sudo sed -i "s/@server_ip/$4/g" "$output"
+  sudo sed -i "s/@server_ip/$5/g" "$output"
   sudo sed -i "s/@server/$3/g" "$output"
+  sudo sed -i "s/@domain/$4/g" "$output"
   sudo sed -i "s/@primary_dc/sfo/g" "$output"
   sudo sed -i "s/@secondary_dc/nyc/g" "$output"
 
@@ -40,6 +41,7 @@ function setup_environment {
 function start_tool {
   sudo systemctl daemon-reload
   sudo systemctl restart "$1"
+  sudo systemctl enable "$1"
 }
 
 function bootstrap {
@@ -48,6 +50,7 @@ function bootstrap {
     # Bootstrap only principal consul for storage the root token
     if [ "$1" == "sfo" ]; then 
       sudo bash "$OUTSIDE/consul/system/bootstrap.sh"
+      return
     fi
 
     # Bootstrap only secondaries
@@ -73,3 +76,6 @@ for t in "${tools[@]}"
 do
   start_tool "${t}"
 done
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo systemctl enable docker

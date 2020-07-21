@@ -1,4 +1,4 @@
-job "counter" {
+job "counter-connect" {
   datacenters = ["sfo-ncv"]
   region = "sfo-region"
   type = "service"
@@ -8,7 +8,7 @@ job "counter" {
 
     service {
       name = "backend"
-      port = "http"
+      port = "8080"
       tags = ["${NOMAD_JOB_NAME}"]
 
       check {
@@ -18,25 +18,32 @@ job "counter" {
         interval = "5s"
         timeout = "2s"
       }
+
+      connect {
+        sidecar_service {
+          proxy {
+            upstreams {
+              destination_name = "redis"
+              local_bind_port = 9090
+            }
+          }
+        }
+      }
     }
 
     network {
       mode = "bridge"
-      port "http" {
-        static = 8080
-        to = 8080
-      }
     }
 
     task "backend" {
       driver = "docker"
 
       config = {
-        image = "pitakill/consul-training-backend:2.0"
+        image = "pitakill/consul-training-backend:3.2"
       }
 
       env {
-        REDIS_HOST = "redis.service.consul"
+        REDIS_HOST = "http://${NOMAD_UPSTREAM_IP_redis}"
       }
 
       resources = {
@@ -91,17 +98,16 @@ job "counter" {
 
     network {
       mode = "bridge"
-
-      port "redis" {
-        static = 6379
-        to = 6379
-      }
     }
 
     service {
       name = "redis"
-      port = "redis"
+      port = "6379"
       tags = ["${NOMAD_JOB_NAME}"]
+
+      connect {
+        sidecar_service {}
+      }
     }
 
     task "redis" {
