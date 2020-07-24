@@ -3,13 +3,24 @@ job "counter" {
   region = "sfo-region"
   type = "service"
 
+  meta {
+    backend_image = "pitakill/consul-training-backend"
+    backend_version = "2.0"
+
+    frontend_image = "pitakill/consul-training-frontend"
+    frontend_version = "3.0"
+
+    database_version = "alpine"
+    database_image = "redis"
+  }
+
   group "backend" {
     count = 1
 
     service {
       name = "backend"
       port = "http"
-      tags = ["${NOMAD_JOB_NAME}"]
+      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"]
 
       check {
         type = "http"
@@ -32,7 +43,7 @@ job "counter" {
       driver = "docker"
 
       config = {
-        image = "pitakill/consul-training-backend:2.0"
+        image = "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"
       }
 
       env {
@@ -61,7 +72,7 @@ job "counter" {
     service {
       name = "frontend"
       port = "http"
-      tags = ["${NOMAD_JOB_NAME}"]
+      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"]
 
       check {
         type = "http"
@@ -76,7 +87,7 @@ job "counter" {
       driver = "docker"
 
       config {
-        image = "pitakill/consul-training-frontend:3.0"
+        image = "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"
       }
 
       resources {
@@ -101,14 +112,14 @@ job "counter" {
     service {
       name = "redis"
       port = "redis"
-      tags = ["${NOMAD_JOB_NAME}"]
+      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_database_image}:${NOMAD_META_database_version}"]
     }
 
     task "redis" {
       driver = "docker"
 
       config {
-        image = "redis:alpine"
+        image = "${NOMAD_META_database_image}:${NOMAD_META_database_version}"
       }
 
       resources {

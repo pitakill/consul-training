@@ -1,40 +1,42 @@
-job "counter-connect" {
+job "counter" {
+  datacenters = ["nyc-ncv"]
+  region = "nyc-region"
+  type = "service"
+
   meta {
     backend_image = "pitakill/consul-training-backend"
     backend_version = "3.2"
 
     frontend_image = "pitakill/consul-training-frontend"
-    frontend_version = "3.2"
+    frontend_version = "3.0"
 
-    database_image = "redis"
     database_version = "alpine"
+    database_image = "redis"
   }
-
-  datacenters = ["sfo-ncv"]
-  region = "sfo-region"
-  type = "service"
 
   group "backend" {
     count = 1
 
     service {
       name = "backend"
+      port = "http"
       tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"]
 
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "redis"
-              local_bind_port = 9090
-            }
-          }
-        }
+      check {
+        type = "http"
+        port = "http"
+        path = "/healthcheck"
+        interval = "5s"
+        timeout = "2s"
       }
     }
 
     network {
       mode = "bridge"
+      port "http" {
+        static = 8080
+        to = 8080
+      }
     }
 
     task "backend" {
@@ -45,7 +47,7 @@ job "counter-connect" {
       }
 
       env {
-        REDIS_HOST = "http://${NOMAD_UPSTREAM_IP_redis}"
+        REDIS_HOST = "redis.service.consul"
       }
 
       resources = {
@@ -72,15 +74,12 @@ job "counter-connect" {
       port = "http"
       tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"]
 
-      connect {
-        sidecar_service {
-          proxy {
-            upstreams {
-              destination_name = "backend"
-              local_bind_port = 8888
-            }
-          }
-        }
+      check {
+        type = "http"
+        port = "http"
+        path = "/"
+        interval = "5s"
+        timeout = "2s"
       }
     }
 
@@ -103,16 +102,17 @@ job "counter-connect" {
 
     network {
       mode = "bridge"
+
+      port "redis" {
+        static = 6379
+        to = 6379
+      }
     }
 
     service {
       name = "redis"
-      port = "6379"
+      port = "redis"
       tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_database_image}:${NOMAD_META_database_version}"]
-
-      connect {
-        sidecar_service {}
-      }
     }
 
     task "redis" {

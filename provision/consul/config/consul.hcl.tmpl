@@ -9,7 +9,10 @@ ui               = true
 server           = true
 bootstrap_expect = {{env "CONSUL_SERVERS"}}
 
-verify_incoming = false
+verify_incoming        = false
+verify_incoming_rpc    = {{ if eq (env "CONSUL_SSL") "true" }}true{{ else }}false{{end}}
+verify_outgoing        = {{ if eq (env "CONSUL_SSL") "true" }}true{{ else }}false{{end}}
+verify_server_hostname = {{ if eq (env "CONSUL_SSL") "true" }}true{{ else }}false{{end}}
 
 retry_join_wan = {{env "DATACENTERS"}}
 
@@ -27,7 +30,7 @@ encrypt = "{{env "CONSUL_ENCRYPT_KEY"}}"
 {{end}}
 
 {{if eq (env "SERVER") "false"}}
-start_join = ["{{env "SERVER_IP"}}"]
+retry_join = ["{{env "SERVER_IP"}}"]
 {{end}}
 
 bind_addr   = "0.0.0.0"
@@ -40,6 +43,7 @@ ports {
 }
 
 advertise_addr = "{{env "IP_ADDRESS"}}"
+advertise_addr_wan = "{{env "IP_ADDRESS"}}"
 
 acl = {
   enabled        = true
@@ -48,6 +52,9 @@ acl = {
 }
 
 enable_central_service_config = true
+encrypt = "{{ env "CONSUL_ENCRYPT_KEY" }}"
+encrypt_verify_incoming = true
+encrypt_verify_outgoing = true
 
 connect {
   enabled = true
