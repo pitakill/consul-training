@@ -1,10 +1,10 @@
 job "counter-connect" {
   meta {
     backend_image = "pitakill/consul-training-backend"
-    backend_version = "3.2"
+    backend_version = "3.4"
 
     frontend_image = "pitakill/consul-training-frontend"
-    frontend_version = "3.2"
+    frontend_version = "3.5"
 
     database_image = "redis"
     database_version = "alpine"
@@ -19,6 +19,7 @@ job "counter-connect" {
 
     service {
       name = "backend"
+      port = "8080"
       tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"]
 
       connect {
@@ -26,7 +27,7 @@ job "counter-connect" {
           proxy {
             upstreams {
               destination_name = "redis"
-              local_bind_port = 9090
+              local_bind_port = 6379
             }
           }
         }
@@ -42,10 +43,6 @@ job "counter-connect" {
 
       config = {
         image = "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"
-      }
-
-      env {
-        REDIS_HOST = "http://${NOMAD_UPSTREAM_IP_redis}"
       }
 
       resources = {
@@ -77,7 +74,7 @@ job "counter-connect" {
           proxy {
             upstreams {
               destination_name = "backend"
-              local_bind_port = 8888
+              local_bind_port = 8080
             }
           }
         }

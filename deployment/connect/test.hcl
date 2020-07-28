@@ -36,7 +36,7 @@ job "countdash" {
 
     service {
       name = "count-dashboard"
-      port = "9002"
+      port = "http"
 
       connect {
         sidecar_service {
