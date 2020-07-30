@@ -1,5 +1,5 @@
 consul {
-  address = "nyc.pitakill.net:8500"
+  address = "172.20.20.21:8500"
 
   retry {
     attempts = 12
@@ -8,7 +8,7 @@ consul {
   ssl {
     enabled = true
     verify = true
-    ca_cert = "/var/certs/fullchain.pem"
+    ca_cert = "/var/certs/consul-agent-ca.pem"
   }
 }
 

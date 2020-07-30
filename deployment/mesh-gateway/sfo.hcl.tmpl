@@ -1,0 +1,105 @@
+job "app" {
+  meta {
+    backend_image = "pitakill/consul-training-backend"
+    backend_version = "3.5"
+
+    frontend_image = "pitakill/consul-training-frontend"
+    frontend_version = "3.6"
+
+    database_image = "redis"
+    database_version = "alpine"
+  }
+
+  datacenters = ["sfo-ncv"]
+  region = "sfo-region"
+  type = "service"
+
+  group "frontend" {
+    count = 1
+
+    network {
+      mode = "bridge"
+
+      port "frontend" {
+        static = 80
+        to = 80
+      }
+    }
+
+    service {
+      name = "frontend-mesh"
+      port = "frontend"
+      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"]
+
+      check {
+        name     = "frontend-health"
+        port     = "frontend"
+        type     = "http"
+        protocol = "http"
+        path     = "/"
+        interval = "5s"
+        timeout  = "2s"
+      }
+
+      connect {
+        sidecar_service {
+          proxy {
+            upstreams {
+              destination_name = "backend-mesh"
+              local_bind_port = 8080
+            }
+          }
+        }
+      }
+    }
+
+    task "frontend" {
+      driver = "docker"
+
+      config {
+        image = "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"
+      }
+
+      resources {
+        cpu = 50
+        memory = 50
+      }
+    }
+  }
+
+  group "mesh-gateway" {
+    count = 1
+
+    task "mesh-gateway" {
+      driver = "raw_exec"
+
+      config {
+        command = "consul"
+        args    = [
+          "connect", "envoy",
+          "-mesh-gateway",
+          "-register",
+          "-service", "gateway-primary",
+          "-address", ":${NOMAD_PORT_proxy}",
+          "-wan-address", "172.20.20.12:${NOMAD_PORT_proxy}",
+          "-admin-bind", "172.20.20.12:19005",
+          "-token", "{{env "CONSUL_HTTP_TOKEN"}}",
+          "-deregister-after-critical", "5s",
+          "--",
+          "-l", "debug"
+        ]
+      }
+
+      resources {
+        cpu    = 100
+        memory = 100
+
+        network {
+          port "proxy" {
+            static = 8433
+          }
+        }
+      }
+    }
+  }
+}

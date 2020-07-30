@@ -1,10 +1,10 @@
 job "counter-connect" {
   meta {
     backend_image = "pitakill/consul-training-backend"
-    backend_version = "3.4"
+    backend_version = "3.5"
 
     frontend_image = "pitakill/consul-training-frontend"
-    frontend_version = "3.5"
+    frontend_version = "3.6"
 
     database_image = "redis"
     database_version = "alpine"
@@ -19,8 +19,19 @@ job "counter-connect" {
 
     service {
       name = "backend"
-      port = "8080"
-      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"]
+      port = "backend"
+      tags = [
+        "${NOMAD_JOB_NAME}",
+        "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"
+      ]
+
+      check {
+        type     = "http"
+        path     = "/healthcheck"
+        port     = "backend"
+        interval = "10s"
+        timeout  = "2s"
+      }
 
       connect {
         sidecar_service {
@@ -36,6 +47,7 @@ job "counter-connect" {
 
     network {
       mode = "bridge"
+      port "backend" {}
     }
 
     task "backend" {
@@ -43,6 +55,10 @@ job "counter-connect" {
 
       config = {
         image = "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"
+      }
+
+      env {
+        PORT = "${NOMAD_PORT_backend}"
       }
 
       resources = {
@@ -58,7 +74,7 @@ job "counter-connect" {
     network {
       mode = "bridge"
 
-      port "http" {
+      port "frontend" {
         static = 80
         to = 80
       }
@@ -66,8 +82,19 @@ job "counter-connect" {
 
     service {
       name = "frontend"
-      port = "http"
-      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"]
+      port = "frontend"
+      tags = [
+        "${NOMAD_JOB_NAME}",
+        "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"
+      ]
+
+      check {
+        type     = "http"
+        path     = "/"
+        port     = "frontend"
+        interval = "10s"
+        timeout  = "2s"
+      }
 
       connect {
         sidecar_service {
@@ -100,12 +127,19 @@ job "counter-connect" {
 
     network {
       mode = "bridge"
+
+      port "database" {
+        static = 6379
+      }
     }
 
     service {
       name = "redis"
-      port = "6379"
-      tags = ["${NOMAD_JOB_NAME}", "${NOMAD_META_database_image}:${NOMAD_META_database_version}"]
+      port = "database"
+      tags = [
+        "${NOMAD_JOB_NAME}",
+        "${NOMAD_META_database_image}:${NOMAD_META_database_version}"
+      ]
 
       connect {
         sidecar_service {}

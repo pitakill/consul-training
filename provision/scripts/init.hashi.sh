@@ -79,3 +79,4 @@ done
 sudo systemctl daemon-reload
 sudo systemctl restart docker
 sudo systemctl enable docker
+bash $OUTSIDE/scripts/deployment.setup.sh

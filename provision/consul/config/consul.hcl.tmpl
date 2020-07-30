@@ -49,6 +49,15 @@ acl = {
   enabled        = true
   default_policy = "deny"
   down_policy    = "extend-cache"
+
+  {{ if eq (env "DATACENTER") (env "PRIMARY_DATACENTER") }}{{else}}
+  enable_token_replication = true
+  {{end}}
+  
+  tokens = {
+    default     = "{{ env "CONSUL_HTTP_TOKEN" }}"
+    replication = "{{ env "CONSUL_HTTP_TOKEN" }}"
+  }
 }
 
 enable_central_service_config = true

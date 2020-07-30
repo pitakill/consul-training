@@ -4,9 +4,8 @@ Vagrant.configure("2") do |config|
     v.memory = 1024
   end
 
-  config.vm.box = "hashi-machine"
-  config.ssh.username = "user"
-  config.ssh.password = "user"
+  config.vm.box = "pitakill/hashi-machine"
+  config.ssh.password = "vagrant"
   # config.vm.box = "ubuntu/xenial64"
   # config.vm.provision "shell", path: "provision/scripts/install.sh", args: "", privileged: false
 
