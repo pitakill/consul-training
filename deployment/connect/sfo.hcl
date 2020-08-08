@@ -1,28 +1,29 @@
-job "counter-connect" {
+job "connect" {
   meta {
-    backend_image = "pitakill/consul-training-backend"
-    backend_version = "3.5"
+    backend_image   = "pitakill/consul-training-backend"
+    backend_version = "3.6"
 
-    frontend_image = "pitakill/consul-training-frontend"
-    frontend_version = "3.6"
+    frontend_image   = "pitakill/consul-training-frontend"
+    frontend_version = "3.7"
 
-    database_image = "redis"
+    database_image   = "redis"
     database_version = "alpine"
   }
 
   datacenters = ["sfo-ncv"]
-  region = "sfo-region"
-  type = "service"
+  region      = "sfo-region"
+  type        = "service"
 
   group "backend" {
-    count = 1
+    count = 2
 
     service {
       name = "backend"
       port = "backend"
+
       tags = [
         "${NOMAD_JOB_NAME}",
-        "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}"
+        "${NOMAD_META_backend_image}:${NOMAD_META_backend_version}",
       ]
 
       check {
@@ -37,8 +38,8 @@ job "counter-connect" {
         sidecar_service {
           proxy {
             upstreams {
-              destination_name = "redis"
-              local_bind_port = 6379
+              destination_name = "database"
+              local_bind_port  = 6379
             }
           }
         }
@@ -47,7 +48,7 @@ job "counter-connect" {
 
     network {
       mode = "bridge"
-      port "backend" {}
+      port "backend"{}
     }
 
     task "backend" {
@@ -62,7 +63,7 @@ job "counter-connect" {
       }
 
       resources = {
-        cpu = 50
+        cpu    = 50
         memory = 50
       }
     }
@@ -76,16 +77,17 @@ job "counter-connect" {
 
       port "frontend" {
         static = 80
-        to = 80
+        to     = 80
       }
     }
 
     service {
       name = "frontend"
       port = "frontend"
+
       tags = [
         "${NOMAD_JOB_NAME}",
-        "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}"
+        "${NOMAD_META_frontend_image}:${NOMAD_META_frontend_version}",
       ]
 
       check {
@@ -101,7 +103,7 @@ job "counter-connect" {
           proxy {
             upstreams {
               destination_name = "backend"
-              local_bind_port = 8080
+              local_bind_port  = 8080
             }
           }
         }
@@ -116,7 +118,7 @@ job "counter-connect" {
       }
 
       resources {
-        cpu = 50
+        cpu    = 50
         memory = 50
       }
     }
@@ -134,11 +136,12 @@ job "counter-connect" {
     }
 
     service {
-      name = "redis"
+      name = "database"
       port = "database"
+
       tags = [
         "${NOMAD_JOB_NAME}",
-        "${NOMAD_META_database_image}:${NOMAD_META_database_version}"
+        "${NOMAD_META_database_image}:${NOMAD_META_database_version}",
       ]
 
       connect {
@@ -146,7 +149,7 @@ job "counter-connect" {
       }
     }
 
-    task "redis" {
+    task "database" {
       driver = "docker"
 
       config {
@@ -154,7 +157,7 @@ job "counter-connect" {
       }
 
       resources {
-        cpu = 50
+        cpu    = 50
         memory = 50
       }
     }

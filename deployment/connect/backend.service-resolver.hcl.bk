@@ -1,0 +1,11 @@
+Kind = "service-resolver"
+Name = "backend"
+
+Subsets = {
+  "green" = {
+    Filter = "Service.Meta.type == green"
+  }
+  "blue" = {
+    Filter = "Service.Meta.type == blue"
+  }
+}

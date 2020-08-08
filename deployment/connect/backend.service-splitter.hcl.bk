@@ -1,0 +1,13 @@
+Kind   = "service-splitter"
+Name   = "backend"
+
+Splits = [
+  {
+    Weight = 50
+    ServiceSubset = "green"
+  },
+  {
+    Weight = 50
+    ServiceSubset = "blue"
+  }
+]
